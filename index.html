@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Workday Timer</title>
+<style>
+  body {
+    margin: 0;
+    background: #e6e9ef;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .card {
+    width: 320px;
+    padding: 20px;
+    border-radius: 20px;
+    background: #e6e9ef;
+    box-shadow:
+      8px 8px 16px #c8cbd1,
+      -8px -8px 16px #ffffff;
+  }
+
+  .time {
+    font-size: 28px;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+
+  .label {
+    text-align: center;
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 14px;
+  }
+
+  .status {
+    text-align: center;
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+
+  .remaining {
+    text-align: center;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 18px;
+  }
+
+  .progress-container {
+    height: 12px;
+    border-radius: 8px;
+    background: #e6e9ef;
+    box-shadow:
+      inset 4px 4px 8px #c8cbd1,
+      inset -4px -4px 8px #ffffff;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    height: 100%;
+    width: 0%;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #6b8cff, #8fb1ff);
+    transition: width 0.5s ease;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="time" id="now"></div>
+  <div class="label" id="range"></div>
+  <div class="status" id="status"></div>
+  <div class="remaining" id="remaining"></div>
+
+  <div class="progress-container">
+    <div class="progress-bar" id="progress"></div>
+  </div>
+</div>
+
+<script>
+  const schedule = [
+    { name: "Arrival & ramp-up", start: "08:00", end: "08:10" },
+    { name: "Work block 1", start: "08:10", end: "09:00" },
+    { name: "Break", start: "09:00", end: "09:10" },
+    { name: "Work block 2", start: "09:10", end: "10:00" },
+    { name: "Break", start: "10:00", end: "10:15" },
+    { name: "Work block 3", start: "10:15", end: "11:05" },
+    { name: "Break", start: "11:05", end: "11:20" },
+    { name: "Work block 4", start: "11:20", end: "12:10" },
+    { name: "Lunch", start: "12:10", end: "12:40" },
+    { name: "Work block 5", start: "12:40", end: "13:30" },
+    { name: "Break", start: "13:30", end: "13:45" },
+    { name: "Work block 6", start: "13:45", end: "14:35" },
+    { name: "Break", start: "14:35", end: "14:50" },
+    { name: "Work block 7", start: "14:50", end: "15:30" }
+  ];
+
+  function toMinutes(t) {
+    const [h, m] = t.split(":").map(Number);
+    return h * 60 + m;
+  }
+
+  const dayStart = toMinutes(schedule[0].start);
+  const dayEnd = toMinutes(schedule[schedule.length - 1].end);
+  const totalMinutes = dayEnd - dayStart;
+
+  function update() {
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    document.getElementById("now").textContent =
+      now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    document.getElementById("range").textContent =
+      "Workday: 8:00 – 3:30";
+
+    const currentBlock = schedule.find(b =>
+      currentMinutes >= toMinutes(b.start) &&
+      currentMinutes < toMinutes(b.end)
+    );
+
+    if (currentBlock) {
+      const end = toMinutes(currentBlock.end);
+      const remaining = end - currentMinutes;
+
+      document.getElementById("status").textContent = currentBlock.name;
+      document.getElementById("remaining").textContent =
+        `${remaining} minute${remaining !== 1 ? "s" : ""} remaining`;
+    } else {
+      document.getElementById("status").textContent = "Outside scheduled blocks";
+      document.getElementById("remaining").textContent = "";
+    }
+
+    const elapsed = Math.min(
+      Math.max(currentMinutes - dayStart, 0),
+      totalMinutes
+    );
+
+    const percent = (elapsed / totalMinutes) * 100;
+    document.getElementById("progress").style.width = `${percent}%`;
+  }
+
+  update();
+  setInterval(update, 1000);
+</script>
+
+</body>
+</html>
